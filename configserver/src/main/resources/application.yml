@@ -1,0 +1,15 @@
+server:
+  port: 8994
+
+spring:
+  application:
+    name: configServer
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Jacob-Jay/springcloud      # 配置git仓库的地址
+          search-paths: config                            # git仓库地址下的相对地址，可以配置多个，用,分割。
+          username:                                             # git仓库的账号
+          password:
+
