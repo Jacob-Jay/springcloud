@@ -18,3 +18,17 @@
 # zull（路由）
 
 1. 指定特定的api将请求转发到对应的服务，还可以在不同时机进行过滤
+
+# config
+
+## server
+
+1. 使用application-xxx方式命名
+
+   /{application}/{profile}[/{label}]		
+   /{application}-{profile}.yml
+   /{label}/{application}-{profile}.yml
+   /{application}-{profile}.properties
+   /{label}/{application}-{profile}.properties
+
+2. 
