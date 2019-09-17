@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Random;
+
 /**
  * @author Jiangqing
  * @version 1.0
@@ -18,6 +20,14 @@ public class HelloController {
     private String port;
     @RequestMapping("hello")
     public String hello(@RequestParam(value = "name",defaultValue = "jq")String name) {
+
+        int i = new Random().nextInt(3000);
+        System.out.println(i);
+        try {
+            Thread.sleep(i);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return "hello  "+name+"i'm from "+port;
     }
 }

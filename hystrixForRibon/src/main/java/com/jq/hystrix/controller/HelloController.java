@@ -14,8 +14,11 @@ public class HelloController {
 
     @RequestMapping("hello")
     public String hello(@RequestParam String name){
-        System.out.println("ok");
         return helloService.hello(name);
+    }
+    @RequestMapping("helloAsync")
+    public String helloAsync(@RequestParam String name){
+        return helloService.helloAsync(name);
     }
 
 }
