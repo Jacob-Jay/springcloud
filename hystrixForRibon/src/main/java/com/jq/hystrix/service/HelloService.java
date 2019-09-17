@@ -1,6 +1,9 @@
 package com.jq.hystrix.service;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.cache.annotation.CacheKey;
+import com.netflix.hystrix.contrib.javanica.cache.annotation.CacheRemove;
+import com.netflix.hystrix.contrib.javanica.cache.annotation.CacheResult;
 import com.netflix.hystrix.contrib.javanica.command.AsyncResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -57,6 +60,11 @@ public class HelloService {
         return s;
 
     }
+
+    public String getKey(String name) {
+        return name;
+    }
+
     public String helloError(String name,Throwable throwable) {
         return "sorry......" + name;
     }

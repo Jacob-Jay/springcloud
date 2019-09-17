@@ -105,21 +105,135 @@
        }
    
    //当方法是本地处理时可以不进行降级处理
-   ```
-
-8. ```java
    
+
+   @HystrixCommand
+   	fallbackMethod  //降级处理方法
+       ignoreExceptions  //不做处理的异常
+       commandKey   //命令的key
+       groupKey   //分组key   通常将组作为一个单位共享线程池
+        threadPoolKey  //在group的基础之上在进行细分   
+           
+   ```
+   
+8. ```java
+   	请求缓存
+   	@CacheResult//开启缓存 默认key为参数组装
+	@CacheRemove(commandKey = "helloAsync")  //清除缓存key为放入缓存的命令的key
+   	可以通过以上两个注解的cacheKeyMethod值设置缓存key（优先级高）
+   	也可以通过@CacheKey("name")制定缓存key
+   ```
+   
+9. ```java
+   //请求合并，将一定时间内的同一个服务的请求合并起来一次性请求
+   com.netflix.hystrix.HystrixCollapser
+   
+    @HystrixCollapser(batchMethod = "getAll",collapserProperties = {
+               @HystrixProperty(name = "timerDelayInMilliseconds",value = "100")
+       }) //将100ms内单个请求合并到一起进行请求，只有在并发量高时才会提高系统性能，否则会降低性能
    ```
 
-9. 
+10. ```java
+    //配置文件  从后往前依次覆盖
+    1. 全局默认值
+    2. 全局配置
+    3. 实例默认值
+    4. 实例配置值
+    
+    ```
 
-10. sd 
+11. command 控制HystrixCommand.run()的执行
 
-11. sd
+    ```java
+    execution.isolation.strategy  //控制隔离级别
+        //thread  独立线程运行，受线程池中的线程数量约束
+        //semaphore  信号量，调用线程上运行，受信号量计数约束
+        
+    execution.isolation. thread.timeoutinMilliseconds  //命令执行超时时间
+    
+    execution.timeout.enabled   //命令执行是否进行超时后进行服务降级
+    
+    execution.isolation.thread.interruptOnTimeout //超时时是否中断
+    
+    execution.isolation.thread.interruptOnCancel //取消时是否中断
+    
+    execution.isolation.semaphore.maxConcurrentRequests  //信号量控制时最大值
+    
+    ```
 
-12. 
+    
 
-13. ![1568702087882](hytrix.png)
+12. fallBack控制HystrixComrnand.getFallback ()的执行
+
+    ```java
+    fallback.isolation.semaphore. maxConcurrentRequests  //该方法执行的最大数量，超过抛异常
+        
+     fallback.enabled //是否开启服务降级   
+    ```
+
+13. circuitBreaker控制断路器的表现
+
+    ```java
+    circuitBreaker.enabled  //命令执行失败时是否跟踪健康状况和熔断请求
+        
+    circuitBreaker.requestVolumeThreshold  //滚动窗口失败触发熔断的个数
+    
+    circuitBreaker.sleepWindowinMilliseconds  //短路器休眠的时间，即打开断路器到尝试关闭的时间
+    
+    circuitBreaker.errorThresholdPercentage  //打开断路器的错误百分比阈值
+    
+    circuitBreaker.forceOpen   //是否强制打开断路器拒绝所有请求
+    
+    circuitBreaker.forceClosed   //是否强制关闭断路器接受所有请求
+    ```
+
+14. metrics  性能指标相关的参数
+
+    ```java
+    metrics.rollingStats.timeinMillionseconds  // 断路器收集信息的时间窗口
+        
+    metrics.rollingStats.numBuckets     //桶数量 和时间窗口结合给定统计的信息的单位时间必须整除，且不能动态修改
+    
+    me丘ics.rollingPercentile.bucketSize // 计算执行次数的值，比如100，执行了150次只统计最后50次的
+    
+    metrics.rollingPercentile.enabled  //
+    
+    metrics.rollingPercentile.timeinMilliseconds //
+    
+    metrics.rollingPercentile.numBuckets  //
+    
+    metrics.healthSnapshot.intervalinMilliseconds//
+    ```
+
+15. 合并请求参数
+
+    ```java
+    maxRequestsinBatch  //一次合并的最大请求数
+        
+    timerDelayinMillionseconds     //合并请求的单位时间
+    
+    requestCache.enabled  //是否开启缓存
+    ```
+
+16. 线程池属性
+
+    ```java
+    coreSize  //线程池的核心数，即最大并发数量
+        
+    maxQueueSize//最大队列容量
+    
+    queueSizeRejectionThreshold  //拒绝的量，即使没达到最大队列量
+    ```
+
+    
+
+17. sd 
+
+18. sd
+
+19. 
+
+20. ![1568702087882](hytrix.png)
 
 
 

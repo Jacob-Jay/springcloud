@@ -9,3 +9,5 @@ spring:
   application:
     name: service-ribbon-hystrix
 
+
+
