@@ -51,7 +51,79 @@
 1. 服务熔断
    1. ribbon：添加注解设定错误回掉方法
    2. fegin：自身就具有hytrix，但是需要配置文件打开，并且将接口实现类注册到容器中
+   
 2. 服务降级
+
+3. ```java
+   1	//包装请求可能有风险的服务的请求，使用了命令模式
+   HystrixComand   //单个结果   
+       	//hot    ===》observer  无论是否有订阅者都会发布事件，订阅者接收部分事件
+       	//cold ====》toObservable   有订阅者才会发布订阅者接收所有事件
+   HystrixObservableCommand //多个结果
+   
+   2	执行处理
+       
+   3   结果是否被缓存（如果缓存功能开启且命中直接返回否则继续）
+   4	断路器是否打开，如果打开直接至8
+   5	检查资源是否用完（线程池，请求队列、信号量）用完至8，每个服务的资源是分割的不会互相影响
+       
+   6	执行请求，异常超时至8，否则返回结果至7
+   7	计算短路器的健康值
+   8	服务降级处理，尽量保证最后获取返回值的是本地的，否则就需要根据执行方法做出不同响应
+   ```
+
+4. ```java
+   HystrixCircuitBreaker //断路器
+       allowRequest//是否允许请求
+       isOpen//断路器是否打开，根据标志或者度量指标qps以及错误百分比，打开时是记录时间com.netflix.hystrix.HystrixCircuitBreaker.HystrixCircuitBreakerImpl#isOpen
+      
+       				
+       markSuccess //  闭合断路器，当请求成功时将打开的断路器关闭
+       内部类
+       Factory  //缓存了命令与断路器的关系
+       NoOpCircuitBreaker //空实现
+       HystrixCircuitBreakerImpl//基本实现（通过isopen和allowSingleTest实现断路器状态自动化）
+       	properties //命令的属性
+       	HystrixCommandMetrics  //命令的度量指标
+       	circuitOpen  //断路器打开标志
+       	circuitOpenedOrLastTestedTime  //断路器上一次打开或测试的时间戳
+   ```
+
+5. ```java
+   使用线程池分离降低了服务之间的影响，会在一定程度上增加响应延迟，如果对延迟要求比较高的服务可以使用信号量代替线程池
+   ```
+
+6. ```java
+   //异步请求
+   ```
+
+7. ```java
+   //服务降级即使用一个本地方法返回值，指挥忽略HystrixBadRequestException异常可以通过ignoreExceptions忽略异常不触发降级处理
+   	@HystrixCommand(fallbackMethod = "default"，ignoreExceptions = RuntimeException.class)
+       public String helloError(String name,Throwable throwable) {
+           return 。。。 //网络请求时仍需要注解标识
+       }
+   
+   //当方法是本地处理时可以不进行降级处理
+   ```
+
+8. ```java
+   
+   ```
+
+9. 
+
+10. sd 
+
+11. sd
+
+12. 
+
+13. ![1568702087882](hytrix.png)
+
+
+
+
 
 # zull（路由）
 
