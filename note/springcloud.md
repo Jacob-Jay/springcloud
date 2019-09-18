@@ -46,6 +46,63 @@
 
 1. 使用接口模拟httpClient实现负载均衡
 
+2. ```java
+   //使用接口访问服务，参数与调用服务一致，实现类作为降级处理
+   @FeignClient(value = "CLIENT-HI",fallback = HytrixError.class)
+   @Service
+   public interface HelloService {
+   
+       @RequestMapping("/hello")
+       //必须加value否则报错
+       String hello(@RequestParam(value = "name") String name);
+       @RequestMapping("feign1")
+       public String feign1(@RequestParam("name") String name) ;
+       @RequestMapping("feign2")
+       public User feign2(@RequestHeader("name") String name, @RequestHeader("age") Integer age);
+       @RequestMapping("feign3")
+       public String feign3(@RequestBody User user);
+   
+   }
+   ```
+
+3. ```java
+   由于服务提供段和服务消费端接口一致可以单独提取一个项目两边引用继承
+   ```
+
+4. ```java
+   serviceName.ribbon.key = value  指定特定服务的配置 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   
+
 # hytrix（熔断）
 
 1. 服务熔断
@@ -118,10 +175,10 @@
    
 8. ```java
    	请求缓存
-   	@CacheResult//开启缓存 默认key为参数组装
+      	@CacheResult//开启缓存 默认key为参数组装
 	@CacheRemove(commandKey = "helloAsync")  //清除缓存key为放入缓存的命令的key
-   	可以通过以上两个注解的cacheKeyMethod值设置缓存key（优先级高）
-   	也可以通过@CacheKey("name")制定缓存key
+      	可以通过以上两个注解的cacheKeyMethod值设置缓存key（优先级高）
+      	也可以通过@CacheKey("name")制定缓存key
    ```
    
 9. ```java
