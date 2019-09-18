@@ -46,6 +46,31 @@
 
 1. 使用接口模拟httpClient实现负载均衡
 
+2. ```java
+   @FeignClient(value = "CLIENT-HI",fallback = HytrixError.class) //表明服务和错误降级处理类
+   @Service
+   public interface HelloService {
+   
+       @RequestMapping("/hello")
+       //必须加value否则报错
+       String hello(@RequestParam(value = "name") String name);
+   }
+   ```
+
+3. ```java
+   
+   ```
+
+4. ```java
+   
+   ```
+
+5. 
+
+6. 
+
+7. 
+
 # hytrix（熔断）
 
 1. 服务熔断
@@ -118,10 +143,10 @@
    
 8. ```java
    	请求缓存
-   	@CacheResult//开启缓存 默认key为参数组装
+      	@CacheResult//开启缓存 默认key为参数组装
 	@CacheRemove(commandKey = "helloAsync")  //清除缓存key为放入缓存的命令的key
-   	可以通过以上两个注解的cacheKeyMethod值设置缓存key（优先级高）
-   	也可以通过@CacheKey("name")制定缓存key
+      	可以通过以上两个注解的cacheKeyMethod值设置缓存key（优先级高）
+      	也可以通过@CacheKey("name")制定缓存key
    ```
    
 9. ```java
