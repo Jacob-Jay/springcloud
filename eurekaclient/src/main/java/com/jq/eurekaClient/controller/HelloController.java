@@ -1,9 +1,8 @@
 package com.jq.eurekaClient.controller;
 
+import com.jq.eurekaClient.entity.User;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Random;
 
@@ -29,5 +28,18 @@ public class HelloController {
             e.printStackTrace();
         }
         return "hello  "+name+"i'm from "+port;
+    }
+
+    @RequestMapping("/feign1")
+    public String feign1(@RequestParam String name) {
+        return "feign1  "+name+"i'm from "+port;
+    }
+    @RequestMapping("/feign2")
+    public User feign2(@RequestHeader String name,@RequestHeader Integer age) {
+        return new User(name, age);
+    }
+    @RequestMapping("/feign3")
+    public String feign3(@RequestBody User user) {
+        return   "feign3  "+user.getName()+"   "+user.getAge()+"   i'm from "+port;
     }
 }
