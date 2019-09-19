@@ -47,29 +47,61 @@
 1. 使用接口模拟httpClient实现负载均衡
 
 2. ```java
-   @FeignClient(value = "CLIENT-HI",fallback = HytrixError.class) //表明服务和错误降级处理类
+   //使用接口访问服务，参数与调用服务一致，实现类作为降级处理
+   @FeignClient(value = "CLIENT-HI",fallback = HytrixError.class)
    @Service
    public interface HelloService {
    
        @RequestMapping("/hello")
        //必须加value否则报错
        String hello(@RequestParam(value = "name") String name);
+       @RequestMapping("feign1")
+       public String feign1(@RequestParam("name") String name) ;
+       @RequestMapping("feign2")
+       public User feign2(@RequestHeader("name") String name, @RequestHeader("age") Integer age);
+       @RequestMapping("feign3")
+       public String feign3(@RequestBody User user);
+   
    }
    ```
 
 3. ```java
-   
+   由于服务提供段和服务消费端接口一致可以单独提取一个项目两边引用继承
    ```
 
 4. ```java
-   
+   serviceName.ribbon.key = value  指定特定服务的配置 
    ```
 
-5. 
+   ```java
+   ad 
+   ```
 
-6. 
+   ```java
+   ad 
+   ```
 
-7. 
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   ```java
+   ad 
+   ```
+
+   
 
 # hytrix（熔断）
 

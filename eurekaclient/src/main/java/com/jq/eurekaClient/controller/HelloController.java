@@ -1,6 +1,6 @@
 package com.jq.eurekaClient.controller;
 
-import com.jq.eurekaClient.entity.User;
+import com.jq.eurekaClient.domian.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,26 +20,27 @@ public class HelloController {
     @RequestMapping("hello")
     public String hello(@RequestParam(value = "name",defaultValue = "jq")String name) {
 
-        int i = new Random().nextInt(3000);
+        /*int i = new Random().nextInt(3000);
         System.out.println(i);
         try {
             Thread.sleep(i);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
         return "hello  "+name+"i'm from "+port;
     }
 
-    @RequestMapping("/feign1")
+
+    @RequestMapping("feign1")
     public String feign1(@RequestParam String name) {
-        return "feign1  "+name+"i'm from "+port;
+        return "feign  "+name+"i'm from "+port;
     }
-    @RequestMapping("/feign2")
-    public User feign2(@RequestHeader String name,@RequestHeader Integer age) {
-        return new User(name, age);
+    @RequestMapping("feign2")
+    public User feign2(@RequestHeader String name, @RequestHeader Integer age) {
+        return  new User(name,age);
     }
-    @RequestMapping("/feign3")
+    @RequestMapping("feign3")
     public String feign3(@RequestBody User user) {
-        return   "feign3  "+user.getName()+"   "+user.getAge()+"   i'm from "+port;
+        return "feign  "+user.getName()+"i'm from "+port;
     }
 }
