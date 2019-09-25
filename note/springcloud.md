@@ -481,6 +481,75 @@ cookie与头信息
 
 
 ```java
+过滤器详解
+核心过滤器  org.springframework.cloud.netflix.zuul.filters下
+
+com.netflix.zuul.http.ZuulServlet
+
+
+
+
+
+  public void service(javax.servlet.ServletRequest servletRequest, javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
+        try {
+            init((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse);
+
+            // Marks this request as having passed through the "Zuul engine", as opposed to servlets
+            // explicitly bound in web.xml, for which requests will not have the same data attached
+            RequestContext context = RequestContext.getCurrentContext();
+            context.setZuulEngineRan();
+
+            try {
+                preRoute();
+            } catch (ZuulException e) {
+                error(e);
+                postRoute();
+                return;
+            }
+            try {
+                route();
+            } catch (ZuulException e) {
+                error(e);
+                postRoute();
+                return;
+            }
+            try {
+                postRoute();
+            } catch (ZuulException e) {
+                error(e);
+                return;
+            }
+
+        } catch (Throwable e) {
+            error(new ZuulException(e, 500, "UNHANDLED_EXCEPTION_" + e.getClass().getName()));
+        } finally {
+            RequestContext.getCurrentContext().unset();
+        }
+    }
+
+
+
+
+
+
+
+	// 过滤类型  
+    	pre     常用于请求的校验
+    		ServletDetectionFilter
+    		Servlet30WrapperFilter
+    		FormBodyWrapperFilter
+    		DebugFilter
+    		PreDecorationFilter
+    		
+    	routing		将请求转发到具体的服务（serviceId  url  forword）	
+    	post		处理响应
+    	error	   发生异常时执行，但最终流向post
+    	
+	//执行顺序  order方法返回值   越小越优先
+	//执行条件  判断是否进行过滤	
+	//具体操作
+		
+		
 
 ```
 
