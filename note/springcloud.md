@@ -298,7 +298,193 @@
 
 # zull（路由）
 
-1. 指定特定的api将请求转发到对应的服务，还可以在不同时机进行过滤
+```java
+概述：
+	对服务访问路径通过eureka注册中心进行自动化，降低维护人员的工作
+	同一控制整个系统的权限限制
+	具有负载均衡功能？？？？
+	熔断功能？？？？
+```
+
+
+
+```java
+入门demo：
+	引入依赖
+	使用@enableZuulProxy开启路由功能
+	
+	配置路由关系：路由context转发到url或者服务（二选一）
+		zuul.routes.api-a.path=/api-a/**             
+		zuul.routes.api-a.url=http://localhost:8080/      无需注册到服务中心
+		zuul.routes.api-a.serviceId=hello-service		 需要注册到服务中心	推荐使用
+	将localhost：zullport/api-a/xxx重新路由到url为http://localhost:8080/xxx
+	或者服务名为hello—service/xxx
+```
+
+
+
+```java
+//创建过滤器对请求进行过滤
+@Component
+public class RouteFilter extends ZuulFilter {
+
+    /**
+     * 定义过滤器的执行时机
+     * 1、pre    路由前执行
+     * 2、route  路由时
+     * 3、post    路由之后  错误之前
+     * 4、error  发生错误
+     * @return
+     */
+    @Override
+    public String filterType() {
+        return "pre";
+    }
+
+    /**
+     * 存在多个过滤器时，定义当前路由器的执行顺序
+     * @return
+     */
+    @Override
+    public int filterOrder() {
+        return 0;
+    }
+
+    /**
+     * 定义是否需要进行过滤，可以根据请求进行判断
+     * @return
+     */
+    @Override
+    public boolean shouldFilter() {
+        //获取当前请求
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        return true;
+    }
+
+    @Override
+    public Object run() throws ZuulException {
+
+        //获取当前请求
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+
+        Object name = request.getParameter("name");
+            if(name == null) {
+                //是否返回路由的响应
+                ctx.setSendZuulResponse(false);
+                //设置响应状态码
+                ctx.setResponseStatusCode(401);
+                ctx.setResponseBody("name is empty");
+
+                return null;
+            }
+            if (!"jq".equals(name)) {
+                ctx.setSendZuulResponse(false);
+                ctx.setResponseStatusCode(402);
+                ctx.setResponseBody("name isn't  jq");
+                return null;
+            }
+            System.out.println("ok");
+
+        return null;
+
+    }
+}
+```
+
+
+
+```java
+路由详解
+	传统路由：不用进行服务注册，直接将请求转发到给定的url
+		单实列：转发到唯一的url
+			zuul. routes.user - service.path=/user - service/xx
+			zuul.routes. user - service.url=http:/ /localhost:8080/
+        多实例：动态负载均衡的转发到配置的各个url
+        	zuul.routes.user - service.path=/user - service/xx
+			zuul. routes.user - service.serviceid=<user - servicename>   //服务名称
+			ribbon.eureka.enabled=false//由于需要负载均衡，但是有没有注册到服务中心所以禁用手动配置
+			<user - servicename>.ribbon.listOfServers=
+					http://localhost:8080/,http://localhost:8081/     //配置服务对应的地址
+	
+	服务路由：需要注册到服务中心，根据服务名称进行转发
+		zuul.routes.user-service.path=/user-service/xx
+		zuul.routes.user-service.serviceid=user-serviceId
+		可以简化为
+		zuul.routes.user-serviceId=/user-service/xx
+		
+	默认路由：默认会为注册中心的服务创建路由信息，context为服务名称
+			可以通过配置过滤某些不想开放的服务不自动生成路由
+			zuul:
+ 			 ignored-services:
+    			- client-hi
+    			- service-ribbon-hystrix	
+```
+
+
+
+```java
+自定义路由映射规则
+
+```
+
+
+
+```java
+路径匹配规则
+    /?  匹配一个字符
+    /*  匹配一层，可以多个字符
+    /** 匹配多层任意字符
+    
+    且匹配是按照yaml申明顺序来匹配并不是详细匹配
+            zuul:
+              routes:
+                service-feign: /api-a/xx/**   调换顺序就会报错
+                api-a:
+                  path: /api-a/**
+                  serviceId: service-ribbon-hystrix
+    
+    zuul.ignored-patterns=/**/hello/**  忽略满足改匹配的请求不进行路由
+```
+
+
+
+```java
+路由前缀
+		zuul.prefix=/api  //在原有路由之前具有改规则才会匹配，并且路由时会默认去除
+```
+
+
+
+```java
+cookie与头信息
+	由于默认会过滤cookie，下游应用会无法接收使用
+	
+	全部放行（不推荐）
+		zuul.sensitiveHeaders=
+	
+	自定义路由放行
+        ＃方法一：对指定路由开启自定义敏感头
+        zuul.routes.<router>.customSensitiveHeaders=true
+        ＃方法二：将指定路由的敏感头设置为空
+        zuul.routes.<router>.sensitiveHeaders=
+```
+
+
+
+```java
+请求从定向
+	比如登陆跳转怎么解决
+```
+
+
+
+```java
+
+```
+
+
 
 # config
 

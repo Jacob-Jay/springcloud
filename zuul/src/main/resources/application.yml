@@ -10,10 +10,11 @@ spring:
     name: service-zuul
 zuul:
   routes:
-    api-a:
+    service-feign: /api-b/**
+    api-c:
       path: /api-a/**
       serviceId: service-ribbon-hystrix
-    api-b:
-      path: /api-b/**
-      serviceId: service-feign
-
+  ignored-services:
+    - client-hi
+    - service-ribbon-hystrix
+#  prefix: /api-b

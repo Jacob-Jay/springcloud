@@ -14,7 +14,7 @@ public class HelloController {
 
     @RequestMapping("hello")
     public String hello(@RequestParam String name){
-        return helloService.hello(name);
+        return helloService.hello("ribbon");
     }
     @RequestMapping("helloAsync")
     public String helloAsync(@RequestParam String name){
