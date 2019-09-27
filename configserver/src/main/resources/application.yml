@@ -1,19 +1,56 @@
 server:
-  port: 8994
+  port: 8991
+
+
+
+
 
 spring:
+  security:
+    user:
+      name: jq
+#      password: 123
+      password: '{cipher}79df3e1b6843873ca841fd961f64b3fd12b3900d95c3f398006b95e8da419d18'
+
   application:
     name: configServer
   cloud:
     config:
       server:
+#        health:
+#          repositories:
+#            check:
+#              name: config
+#              profiles: dev
+#            chek:
+#              name: config2
+#              profiles: dev
         git:
-          uri: https://github.com/Jacob-Jay/springcloud      # 配置git仓库的地址
-          search-paths: config                            # git仓库地址下的相对地址，可以配置多个，用,分割。
-          username:                                             # git仓库的账号
-          password:
+          uri: https://github.com/Jacob-Jay/{application}/   # 配置git仓库的地址
+#          uri: https://github.com/Jacob-Jay/config/   # 配置git仓库的地址
+          search-paths: cloud                            # git仓库地址下的相对地址，可以配置多个，用,分割。
+          username: 819657451@qq.com                                           # git仓库的账号
+          password: 697294jq.
+        overrides:
+          age: 99999
+
+#          repos:
+#            config2: https://github.com/Jacob-Jay/config2/cloud
+#            jq:
+#              pattern: project/*
+#              uri: https://github.com/Jacob-Jay/config/cloud
+#          basedir: D:/own/localHistory
+
+#            stw:
+#              pattern: config2/*
+#              uri: https://github.com/Jacob-Jay/config2/cloud
+
+
 
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+
+
+

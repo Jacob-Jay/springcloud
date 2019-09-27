@@ -559,12 +559,241 @@ com.netflix.zuul.http.ZuulServlet
 
 ## server
 
-1. 使用application-xxx方式命名
+```java
+1、引入依赖
+2、启动类加载@EnableConfigServer
+3、在config仓库下创建cloud目录，创建四个配置文件：
+	project.yml			name = default-v1
+	project-dev.yml		name = dev-v1
+	project-test.yml	name = test-v1
+	project-pro.yml		name = test-v1
+	为了测试版本创建v2分支，也是这四个配置文件
+	project.yml			name = default-v2
+	project-dev.yml		name = dev-v2
+	project-test.yml	name = test-v2
+	project-pro.yml		name = test-v2
+4、启动服务进行访问，url规则：
+	/{application}/{profile}[/{label}]  		/project/dev/v2      		
+	/{application}-{profile}.yml				/project-dev.yml
+	/{label}/{application}-{profile}.yml		/v2/project-dev.yml
+	/{application}-{profile}.properties			/project-dev.roperties
+	/{label}/{application}-{profile}.properties /v2/project-dev.properties
+	以上为映射结果关系，v2代表分支可以不写默认为master
+	访问具体文件时返回的时文件内容
+	如果转换为url访问返回的：见下图
+	
+```
 
-   /{application}/{profile}[/{label}]		
-   /{application}-{profile}.yml
-   /{label}/{application}-{profile}.yml
-   /{application}-{profile}.properties
-   /{label}/{application}-{profile}.properties
+![1569487905689](config)
 
-2. 
+
+
+```java
+服务端主要是从仓库获取配置文件，保存至本地
+	如果有请求获取配置先从远端获取，获取不到就返回本地之前保存的
+```
+
+
+
+
+
+
+
+## client
+
+```java
+1、引入依赖
+2、bootstrap.yml配置server相关信息
+	spring.application.name=project				//必须为配置文件命名的porject-dev的project
+	spring.cloud.config.profile=dev				//project-dev的dev
+	spring.cloud.config.label=v2				//分支名称 不写默认为master
+	spring.cloud.config.uri=http://localhost:7001/		//配置服务的url
+3、获取配置文件的值
+	1、@value 使用注解获取
+	
+	@Value("${age}")
+    private int age;
+    @Value("${name}")
+    private String name;
+
+    @RequestMapping("value")
+    public String hello() {
+        return name + "   " + age;
+    }
+	
+	2、org.springframework.core.env.Environment#getProperty(java.lang.String)
+	
+	@Autowired
+    private Environment environment;
+
+    @RequestMapping("env")
+    public String env() {
+        return environment.getProperty("name") + "   " + environment.getProperty("age");
+    }
+```
+
+
+
+
+
+```java
+ cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Jacob-Jay/{application}/ 
+          search-paths: cloud                            
+          username: 819657451@qq.com                         
+          password: 697294jq.
+          basedir: D:/own/localHistory      //设置本地存储的位置，不再使用默认位置
+              
+              
+    application由url规则的{application}代替
+    
+    
+    
+ 多仓库 ：动态管理多个项目的配置文件XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ 
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Jacob-Jay/config/      //默认位置，其他仓库找不到是这里找
+          search-paths: cloud                          
+          username: 819657451@qq.com                                 
+          password: 697294jq.
+          repos:
+            config2: https://github.com/Jacob-Jay/config2/cloud   //有问题
+            jq:							//映射application为project的去配置的路径下找
+              pattern: project/*				
+              uri: https://github.com/Jacob-Jay/config/cloud
+```
+
+```java
+健康监测
+	http://localhost:8991/actuator/health
+	可以根据配置的https://github.com/Jacob-Jay/config/   去检测是否能联通，如果使用通配符时会默认创建一个app的application，因为不存在该长裤检测结果为down，服务化时会影响结果，解决办法：
+	1、创建一个app仓库
+	2、指定检测的仓库而不是默认的app
+		cloud:
+        config:
+          server:
+            health:
+              repositories:     //为map可以配置多个key为check和check2
+                check:			
+                  name: config
+                  profiles: dev
+                 check2:
+                  name: config
+                  profiles: dev
+```
+
+```java
+所有客户端通过服务中心获取的name和from都是固定的，不论git仓库配置文件总是啥
+
+spring.cloud.config.server.overrides.name=didi
+spring.cloud.config.server.overrides.from=shanghai
+```
+
+安全
+
+```java
+由于配置中心不可能所有人都能访问所以添加security进行访问控制，不适用随机密码，通过配置写死，可以用数据库动态
+	spring:
+      security:
+        user:
+          name: jq
+          password: 123
+              
+客户端访问：配置文件添加
+spring.cloud.config.username=jq
+spring.cloud.config.password=123
+```
+
+加密访问
+
+```java
+需要替换jar包（security的）
+
+对称加密
+	bootstrap.yml配置密钥encryt.key=自己写
+	http://localhost:8991/encrypt   对参数加密
+	http://localhost:8991/decrypt   对加密结果解密
+	
+properties使用{cipher}表明是加密值
+spring.datasource.password={cipher}dba6505baa8ld78bd08799d8d4429de499bd4c2053c0
+5f029e7cfbf143695f5b
+yml配置需要用‘’包起
+spring:
+  security:
+    user:
+      name: jq
+#      password: 123
+      password: '{cipher}79df3e1b6843873ca841fd961f64b3fd12b3900d95c3f398006b95e8da419d18'
+          
+          
+  非对称加密        
+```
+
+作为服务提供，并不是通过传统的url
+
+```java
+服务端只需要注册到eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+
+客户端修改连接方式
+spring:
+  application:
+    name: config
+  cloud:
+    config:
+      profile: dev
+      uri: http://localhost:8991/
+      label: v2
+      username: jq
+      password: 123
+      name: project
+      
+   修改为
+   
+spring:
+  application:
+    name: config
+  cloud:
+    config:
+      name: config2    //{application} 决定仓库优先级高于spring.application.name
+      profile: dev
+#      uri: http://localhost:8994/
+      discovery:
+        enabled: true
+        service-id: configServer
+      label: v2
+      password: 123
+      username: jq
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+```
+
+```java
+配置客户端连接服务端时会预先加载其他信息，万一配置服务无效，加载相当于无用功，所以设置
+spring.cloud.config.failFast= true  先加载配置服务
+但是可能由于网络问题，需要重试
+只需要在pom添加依赖
+    <dependency>
+        <groupid>org.springframework.retry</groupid>
+        <artifactid>spring-retry</artifactid>
+    </dependency>
+    <dependency>
+        <groupid>org.springframework.boo七</groupid>
+        <artifactid>spring-boot-starter-aop</ar七ifactid>
+    </dependency>
+    
+```
+

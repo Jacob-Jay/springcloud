@@ -1,17 +1,36 @@
 
+
 spring:
   application:
-    name: configClient
+    name: config2
   cloud:
     config:
-      name: s
+      name: config
       profile: dev
 #      uri: http://localhost:8994/
       discovery:
         enabled: true
         service-id: configServer
-
+      label: v2
+      password: 123
+      username: jq
+      fail-fast: true
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+
+
+
+#spring:
+#  application:
+#    name: config
+#  cloud:
+#    config:
+#      profile: dev
+#      uri: http://localhost:8991/
+#      label: v2
+#      username: jq
+#      password: 123
+#      name: project
+
