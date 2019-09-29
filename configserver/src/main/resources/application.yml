@@ -4,13 +4,12 @@ server:
 
 
 
-
 spring:
-  security:
-    user:
-      name: jq
-#      password: 123
-      password: '{cipher}79df3e1b6843873ca841fd961f64b3fd12b3900d95c3f398006b95e8da419d18'
+#  security:
+#    user:
+#      name: jq
+##      password: 123
+#      password: '{cipher}79df3e1b6843873ca841fd961f64b3fd12b3900d95c3f398006b95e8da419d18'
 
   application:
     name: configServer
@@ -31,8 +30,8 @@ spring:
           search-paths: cloud                            # git仓库地址下的相对地址，可以配置多个，用,分割。
           username: 819657451@qq.com                                           # git仓库的账号
           password: 697294jq.
-        overrides:
-          age: 99999
+#        overrides:
+#          age: 99999
 
 #          repos:
 #            config2: https://github.com/Jacob-Jay/config2/cloud
@@ -51,6 +50,11 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 
 
 

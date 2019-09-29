@@ -797,3 +797,184 @@ spring.cloud.config.failFast= true  先加载配置服务
     
 ```
 
+### 刷新
+
+```java
+pom添加依赖
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+controller添加注解	
+		@RefreshScope 
+配置文件添加
+	management:
+      endpoints:
+        web:
+          exposure:
+            include: '*'
+访问url刷新 必须post
+http://localhost:8993/actuator/refresh
+```
+
+
+
+
+
+# BUS(消息总线)
+
+## 消息代理
+
+```java
+消息代理：一种消息验证、传输、路由的架构，解耦应用之间的通讯过程，实际就是一个消息中间件
+
+使用场景:
+	消息转换为其他形式
+	聚集分解消息送至目的地，并返回结果给用户
+	调用web服务检索数据
+	发布订阅模式的消息路由
+	响应事件或错误
+
+常见产品：
+	activeMq
+	kafka
+	rabbitMq
+	rocketMq
+```
+
+
+
+## rabbitMq
+
+
+
+![1569637823796](rabbitMq.png)
+
+```java
+实现了amqp协议由erlong编写的而消息中间件
+
+amqp：高级消息队列协议，面向消息层中间件的应用层协议
+	消息队列
+	消息方向
+	消息路由
+	可靠性
+	安全性
+
+基本概念
+	broker：消息队列的服务器，负责接收生产者的消息，将其发送给消费者或者转发至其他broker，其实就是				rabbitMq的一个服务实例
+	exchange：消息交换机，从生产者接收消息并按照一定规则路由到指定队列
+	queue:消息队列，消息通过发送和路由之后最终到达的地方，一个消息可以到一个或多个消息队列，队列中的消息为			逻辑带消费状态
+	binding：将exchange 和queue 按照一定规则绑定的虚拟连接
+	routing  key:路由关键字，exchange将消息投递到queue的规则
+	virtual host：虚拟主机，对服务器的虚拟划分，主要是为了不同用户的权限分离
+	connection：消费者、生产者与broker之间的物理网络连接,只会由消费者生产者创建或关闭，除非网络问题
+	channel：消息通道，连接生产者与消费者的逻辑通道，相当于一个会话
+	producer：消息的生产者，制造并发送消息的程序
+	consumer：消息的消费者，接收并处理消息的程序
+	
+	
+	
+	
+基本步骤
+获取连接  创建channle	  创建队列   发送或消费消息
+
+exchange类型：
+		direct：根据指定key交换
+		topic：匹配交换
+		fanout：广播模式，将消息投递到绑定的所有队列
+		
+消息持久化
+	exchange :  durable>=1
+	queue:		durable>=1
+	bingding:	delivery_mode>=2  需要exchange和queue都是持久化时才能持久化
+```
+
+
+
+```java
+客户端更新
+	任意一个客户端都可以作为生产者，同时都是消费者，即某个客户端发送刷新消息后所有客户端都会消费消息对配置进行更新
+
+
+	1、添加依赖
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-bus-amqp</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+	2、使用注解
+		@RefreshScope 
+	3、yml暴露刷新端点，配置mq
+        management:
+          endpoints:
+            web:
+              exposure:
+                include: '*'
+        spring:            
+          rabbitmq:
+            username: springcloud
+            password: 123456
+                
+     4、访问url更新属性，post
+     http://localhost:8994/actuator/bus-refresh
+     
+
+服务端更新
+	类似于客户端，只是不需要使用注解，因为是客户端消费
+
+	指定刷新范围待定：：：：：：：：：：：：：：：：：：：：：：：：：：
+```
+
+## kafka
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

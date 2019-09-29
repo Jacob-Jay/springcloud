@@ -1,2 +1,6 @@
 encrypt:
   key: jq1994
+spring:
+  rabbitmq:
+    password: 123456
+    username: springcloud

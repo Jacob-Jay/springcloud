@@ -1,5 +1,4 @@
 
-
 spring:
   application:
     name: config2
@@ -12,13 +11,22 @@ spring:
         enabled: true
         service-id: configServer
       label: v2
-      password: 123
-      username: jq
-      fail-fast: true
+#      password: 123
+#      username: jq
+#      fail-fast: true
+  rabbitmq:
+    username: springcloud
+    password: 123456
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: '*'
+
 
 
 
