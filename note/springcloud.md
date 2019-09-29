@@ -932,6 +932,18 @@ exchange类型：
 
 
 
+```java
+kafak
+
+基本概念
+	broker：与rabbit一致，即服务程序实例
+	topic：逻辑topic类似于rabbit得queue，物理上就是
+	partition:为了提高吞吐将物理上的topic分为一个或多个partition（文件夹）
+	producer：消息的生产者，制造并发送消息的程序
+	consumer：消息的消费者，接收并处理消息的程序
+	consumer Group:消费者归属组，不指定默认用来实现一个消息被组内多个成员共同消费
+```
+
 
 
 

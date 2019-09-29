@@ -1,0 +1,11 @@
+
+server:
+  port: 8099
+spring:
+  application:
+    name: rabbitMqBus
+  rabbitmq:
+    username: springcloud
+    password: 123456
+#    host: localhost
+#    port: 5672
