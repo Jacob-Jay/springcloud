@@ -946,7 +946,82 @@ kafak
 
 
 
+# stream（消息驱动）
 
+入门
+
+```java
+添加pom依赖
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-stream-rabbit</artifactId>
+		</dependency>
+
+配置rabbit
+	spring:
+      rabbitmq:
+        password: 123456
+        username: springcloud
+配置消费者，生生产者
+@EnableBinding(Sink.class)//表明接收消息因为skin接口定义了@input
+public class Receiver {
+    @StreamListener(Sink.INPUT)  //监听接收事件
+    public void receive(Object obj) {
+        System.out.println("receive "+ obj);
+    }
+}
+
+
+
+@EnableBinding(Producer.class)
+@RestController
+@RequestMapping("stream")
+public class SendController {
+    @Autowired
+    private Producer producer;
+    @RequestMapping("send")
+    public String send(String content) {
+		/** producer.output()等价于
+		 *	@Autowired
+    	*	private MessageChannel output;//output为producer得通道名称，即可以
+    	*	output.send(MessageBuilder.withPayload(content).build());
+		*/
+        producer.output().send(MessageBuilder.withPayload(content).build());
+        return "ok";
+    }
+}
+
+
+public interface Producer {
+
+   
+    String OUTPUT = "output";
+
+    @Output(Producer.OUTPUT)
+    MessageChannel output();
+}
+通过binder实现了应用程序与中间件之间得解耦
+```
+
+```java
+发布订阅：
+即多个程序同时订阅一个exchange，可以很好实现横向扩展
+
+
+消费组：
+发布订阅很好解决得耦合，但是在微服务中一个服务可能被部署多个，那么一个消息可能被一个服务消费多次，因此使用消费组解决该问题
+    配置指定服务所属组
+    spring:
+      cloud:
+        stream:
+          bindings:
+            input:
+              group: jq
+              
+              
+消息分区：
+通过设置消费组已经能够解决一个消息被同意服务得不同实例之消费一次得问题，但是每次消费得实例可能并不相同，对于某些特殊需求要求某些消息被同一个实例消费
+```
 
 
 

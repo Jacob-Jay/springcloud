@@ -1,0 +1,12 @@
+spring:
+  rabbitmq:
+    password: 123456
+    username: springcloud
+  cloud:
+    stream:
+      bindings:
+        input:
+          group: jq
+server:
+  port: 8093
+
