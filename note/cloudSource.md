@@ -6,6 +6,83 @@
 
 ​	服务发送rest请求向服务注册中心注册，携带自身的ip、port等，维护在一个双层map中
 
+#### 服务端
+
+最下面instanceRegisrty是spring的主要负责事件的发布服务注册相关工作有netflix的eureka组件负责
+
+![1570591647512](instanceRegistry.png)
+
+- 接收注册请求
+
+  com.netflix.eureka.resources.ApplicationResource#addInstance方法（使用的jersey实现rest）
+
+- 检查续约时间设定
+
+  org.springframework.cloud.netflix.eureka.server.InstanceRegistry#resolveInstanceLeaseDuration
+
+```java
+//如果服务提供者没有设置或者设置时间无效就使用默认值，反之使用设置的值
+private int resolveInstanceLeaseDuration(final InstanceInfo info) {
+		int leaseDuration = Lease.DEFAULT_DURATION_IN_SECS;
+		if (info.getLeaseInfo() != null && info.getLeaseInfo().getDurationInSecs() > 0) {
+			leaseDuration = info.getLeaseInfo().getDurationInSecs();
+		}
+		return leaseDuration;
+	}
+//服务提供者设定的参数值
+org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean#leaseExpirationDurationInSeconds
+```
+
+- 发布服务注册事件
+
+  org.springframework.cloud.netflix.eureka.server.InstanceRegistry#handleRegistration
+
+-  注册到服务中心
+
+  com.netflix.eureka.registry.AbstractInstanceRegistry#register
+
+  ```java
+  //注册信息维护在一个双层map中，外层key是appName，内层key是instenceId
+  private final ConcurrentHashMap<String, Map<String, Lease<InstanceInfo>>> registry
+              = new ConcurrentHashMap<String, Map<String, Lease<InstanceInfo>>>();
+  
+  //InstanceInfo  每个服务的属性实例
+  //Lease  服务注册状态的实例，
+  
+  
+  //注册时检测是否已存在当前appName的instanceId的应用，如果存在且还没有过期就使用原先存在的InstanceInfo，只需要更新一些属性，否则使用注册请求的InstanceInfo
+  ```
+
+  
+
+- 将信心同步到兄弟节点
+
+  com.netflix.eureka.registry.PeerAwareInstanceRegistryImpl#replicateToPeers
+
+  ```java
+   
+              //如果是其他节点同步过来或者服务为空就不同步		
+              if (peerEurekaNodes == Collections.EMPTY_LIST || isReplication) {
+                  return;
+              }
+  
+              for (final PeerEurekaNode node : peerEurekaNodes.getPeerEurekaNodes()) {
+                  //自身忽略
+                  if (peerEurekaNodes.isThisMyUrl(node.getServiceUrl())) {
+                      continue;
+                  }
+                  replicateInstanceActionsToPeers(action, appName, id, info, newStatus, node);
+              }
+  ```
+
+  
+
+#### 客户端
+
+
+
+com.netflix.discovery.DiscoveryClient#initScheduledTasks
+
 ### 服务续约
 
 服务提供者每隔一定时间（30s）向注册中心发送请求进行续约，防止被剔除
@@ -75,5 +152,7 @@ org.springframework.cloud.netflix.eureka.server.InstanceRegistry#register(com.ne
 ### applications
 
 ### instenceInfo
+
+![1570585817893](instenceinfo.png)
 
 ### EurekaBootStrap
