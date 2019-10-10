@@ -79,9 +79,17 @@ org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean#leaseExpiratio
 
 #### 客户端
 
+cloudEurekaClient是spring实现的用于自动配置类是启动eureka，上面的都是netflix原生实现
 
+![1570718941923](clientEureka.png)
 
 com.netflix.discovery.DiscoveryClient#initScheduledTasks
+
+
+
+- 发送请求执行注册
+
+com.netflix.discovery.DiscoveryClient#register
 
 ### 服务续约
 
@@ -152,6 +160,8 @@ org.springframework.cloud.netflix.eureka.server.InstanceRegistry#register(com.ne
 ### applications
 
 ### instenceInfo
+
+封装了服务的各种信息
 
 ![1570585817893](instenceinfo.png)
 
