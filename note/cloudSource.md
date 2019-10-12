@@ -83,6 +83,155 @@ cloudEurekaClient是spring实现的用于自动配置类是启动eureka，上面
 
 ![1570718941923](clientEureka.png)
 
+
+
+- 初始化服务端
+
+  ```java
+  org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration.EurekaClientConfiguration#eurekaClient  自动配置类进行初始化，构造父类时进行一些列操作
+  
+  参数设置、各种监视器初始化
+  
+   if (!config.shouldRegisterWithEureka() && !config.shouldFetchRegistry())
+       检测当不需要注册 也不需要收索服务时直接放回
+  ```
+
+  ```java
+  创建调度器以及心跳检测执行器和服务收索执行器
+  ```
+
+  ```java
+  创建httpcilent
+  ```
+
+  ```java
+  区域信息设置
+  ```
+
+  ```java
+   if (clientConfig.shouldFetchRegistry() && !fetchRegistry(false)) {
+              fetchRegistryFromBackup(); 
+       }
+  从注册中心获取服务，如果全部失败就使用默认的地址获取
+  ```
+
+  ```java
+  if (this.preRegistrationHandler != null) {
+              this.preRegistrationHandler.beforeRegistration();
+     }
+  注册前置处理
+  
+  ```
+
+  ```java
+  开始服务列表更新定时任务
+   if (clientConfig.shouldFetchRegistry()) {
+              
+              int registryFetchIntervalSeconds = clientConfig.getRegistryFetchIntervalSeconds();   //执行间隔
+              int expBackOffBound = clientConfig.getCacheRefreshExecutorExponentialBackOffBound();
+              scheduler.schedule(
+                      new TimedSupervisorTask(
+                              "cacheRefresh",
+                              scheduler,
+                              cacheRefreshExecutor,
+                              registryFetchIntervalSeconds,
+                              TimeUnit.SECONDS,
+                              expBackOffBound,
+                              new CacheRefreshThread()
+                      ),
+                      registryFetchIntervalSeconds, TimeUnit.SECONDS);
+          }
+  ```
+
+  ```java
+  开启续约定时任务
+   scheduler.schedule(
+                      new TimedSupervisorTask(
+                              "heartbeat",
+                              scheduler,
+                              heartbeatExecutor,
+                              renewalIntervalInSecs,
+                              TimeUnit.SECONDS,
+                              expBackOffBound,
+                              new HeartbeatThread()
+                      ),
+                      renewalIntervalInSecs, TimeUnit.SECONDS);
+  ```
+
+  ```java
+  ​```注册
+  instanceInfoReplicator = new InstanceInfoReplicator(
+                      this,
+                      instanceInfo,
+                      clientConfig.getInstanceInfoReplicationIntervalSeconds(),
+                      2); // burstSize
+  
+  //状态监听器
+              statusChangeListener = new ApplicationInfoManager.StatusChangeListener() {
+                  @Override
+                  public String getId() {
+                      return "statusChangeListener";
+                  }
+  
+                  @Override
+                  public void notify(StatusChangeEvent statusChangeEvent) {
+                      if (InstanceStatus.DOWN == statusChangeEvent.getStatus() ||
+                              InstanceStatus.DOWN == statusChangeEvent.getPreviousStatus()) {
+                          // log at warn level if DOWN was involved
+                          logger.warn("Saw local status change event {}", statusChangeEvent);
+                      } else {
+                          logger.info("Saw local status change event {}", statusChangeEvent);
+                      }
+                      instanceInfoReplicator.onDemandUpdate();
+                  }
+              };
+  
+              if (clientConfig.shouldOnDemandUpdateStatusChange()) {
+                  applicationInfoManager.registerStatusChangeListener(statusChangeListener);
+              }
+  
+              instanceInfoReplicator.start(clientConfig.getInitialInstanceInfoReplicationIntervalSeconds());  //开始注册任务
+  
+  
+  
+  public void run() {
+          try {
+              discoveryClient.refreshInstanceInfo();
+  
+              Long dirtyTimestamp = instanceInfo.isDirtyWithTime();
+              if (dirtyTimestamp != null) {
+                  discoveryClient.register();  //注册
+                  instanceInfo.unsetIsDirty(dirtyTimestamp);
+              }
+          } catch (Throwable t) {
+              logger.warn("There was a problem with the instance info replicator", t);
+          } finally {
+              Future next = scheduler.schedule(this, replicationIntervalSeconds, TimeUnit.SECONDS);
+              scheduledPeriodicRef.set(next);
+          }
+      }
+  
+  //发送注册请求
+  boolean register() throws Throwable {
+          logger.info(PREFIX + "{}: registering service...", appPathIdentifier);
+          EurekaHttpResponse<Void> httpResponse;
+          try {
+              httpResponse = eurekaTransport.registrationClient.register(instanceInfo);
+          } catch (Exception e) {
+              logger.warn(PREFIX + "{} - registration failed {}", appPathIdentifier, e.getMessage(), e);
+              throw e;
+          }
+          if (logger.isInfoEnabled()) {
+              logger.info(PREFIX + "{} - registration status: {}", appPathIdentifier, httpResponse.getStatusCode());
+          }
+          return httpResponse.getStatusCode() == Status.NO_CONTENT.getStatusCode();
+      }
+  ```
+
+  
+
+  
+
 com.netflix.discovery.DiscoveryClient#initScheduledTasks
 
 
@@ -95,13 +244,106 @@ com.netflix.discovery.DiscoveryClient#register
 
 服务提供者每隔一定时间（30s）向注册中心发送请求进行续约，防止被剔除
 
+
+
+#### 客户端
+
+```java
+ private class HeartbeatThread implements Runnable {
+
+        public void run() {
+            if (renew()) {
+                lastSuccessfulHeartbeatTimestamp = System.currentTimeMillis();
+            }
+        }
+    }
+
+
+com.netflix.discovery.DiscoveryClient#renew
+
+boolean renew() {
+        EurekaHttpResponse<InstanceInfo> httpResponse;
+        try {
+            httpResponse = eurekaTransport.registrationClient.sendHeartBeat(instanceInfo.getAppName(), instanceInfo.getId(), instanceInfo, null);//发送续约请求
+            logger.debug(PREFIX + "{} - Heartbeat status: {}", appPathIdentifier, httpResponse.getStatusCode());
+            if (httpResponse.getStatusCode() == Status.NOT_FOUND.getStatusCode()) {
+                REREGISTER_COUNTER.increment();
+                logger.info(PREFIX + "{} - Re-registering apps/{}", appPathIdentifier, instanceInfo.getAppName());
+                long timestamp = instanceInfo.setIsDirtyWithTime();
+                boolean success = register();
+                if (success) {
+                    instanceInfo.unsetIsDirty(timestamp);
+                }
+                return success;
+            }
+            return httpResponse.getStatusCode() == Status.OK.getStatusCode();
+        } catch (Throwable e) {
+            logger.error(PREFIX + "{} - was unable to send heartbeat!", appPathIdentifier, e);
+            return false;
+        }
+    }
+```
+
+
+
+#### 服务端
+
+
+
+com.netflix.eureka.resources.InstanceResource#renewLease
+
+```java
+@PUT
+    public Response renewLease(
+            @HeaderParam(PeerEurekaNode.HEADER_REPLICATION) String isReplication,
+            @QueryParam("overriddenstatus") String overriddenStatus,
+            @QueryParam("status") String status,
+            @QueryParam("lastDirtyTimestamp") String lastDirtyTimestamp) {
+        boolean isFromReplicaNode = "true".equals(isReplication);
+        boolean isSuccess = registry.renew(app.getName(), id, isFromReplicaNode);
+
+        // Not found in the registry, immediately ask for a register
+        if (!isSuccess) {
+            logger.warn("Not Found (Renew): {} - {}", app.getName(), id);
+            return Response.status(Status.NOT_FOUND).build();
+        }
+        // Check if we need to sync based on dirty time stamp, the client
+        // instance might have changed some value
+        Response response;
+        if (lastDirtyTimestamp != null && serverConfig.shouldSyncWhenTimestampDiffers()) {
+            response = this.validateDirtyTimestamp(Long.valueOf(lastDirtyTimestamp), isFromReplicaNode);
+            // Store the overridden status since the validation found out the node that replicates wins
+            if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()
+                    && (overriddenStatus != null)
+                    && !(InstanceStatus.UNKNOWN.name().equals(overriddenStatus))
+                    && isFromReplicaNode) {
+                registry.storeOverriddenStatusIfRequired(app.getAppName(), id, InstanceStatus.valueOf(overriddenStatus));
+            }
+        } else {
+            response = Response.ok().build();
+        }
+        logger.debug("Found (Renew): {} - {}; reply status={}", app.getName(), id, response.getStatus());
+        return response;
+    }
+```
+
+
+
 ### 服务同步
 
 ​	多个服务注册中心之间进行服务注册信息的同步，维护服务的一致性
 
+#### 发送方
+
+#### 接收方
+
 ### 获取服务
 
 ​	服务注册时获取服务注册中心维护的只读服务列表默认服务和服务注册中心的列表都是30秒跟新
+
+#### 服务端
+
+#### 客户端
 
 ### 服务调用
 
