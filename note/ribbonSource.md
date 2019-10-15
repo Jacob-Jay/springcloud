@@ -40,6 +40,8 @@
 
 ### getForEntity
 
+请求方
+
 ```java
 //使用string得url，可变数组填充参数
 restTemplate.getForEntity("http://hello/client?name={}&age={}",String.class,"ss",20)
@@ -64,6 +66,15 @@ UriComponents ss = UriComponentsBuilder.fromUriString("http://hello/client?name=
         return body;
 ```
 
+接收方
+
+```java
+@RequestMapping
+    public String hello(@RequestParam String name,@RequestParam String age) {
+        return "hello i'm "+name+"from port:" + port+"i'm   "+age+" ages old";
+    }
+```
+
 
 
 
@@ -76,14 +87,87 @@ UriComponents ss = UriComponentsBuilder.fromUriString("http://hello/client?name=
 
 ·
 
+参数占位符
+
 ```java
+//请求
 ResponseEntity<String> post = restTemplate.
                 postForEntity("http://hello/client?name={1}&age={1}", null, String.class, "post", 22);
         return post.getBody();
+
+//接收
+@RequestMapping
+    public String hello(@RequestParam String name,@RequestParam String age) {
+        return "hello i'm "+name+"from port:" + port+"i'm   "+age+" ages old";
+    }
 ```
+
+传递实体类
+
+路径占位符
+
+路径实体混合
+
+```java
+//请求
+ResponseEntity<String> post = restTemplate.
+                postForEntity("http://hello/client/bodyAndPathVarivle/{sex}", user, String.class,"nan");
+        return post.getBody();
+
+//接收 
+@PostMapping("bodyAndPathVarivle/{sex}")
+    public String body(  @RequestBody User user,@PathVariable String sex){
+        return "hello i'm "+user.getName()+"from port:" + port+"i'm   "+user.getAge()+" ages old   "+sex;
+
+    }
+```
+
+
+
+
 
 
 
 ## put
 
+将资源添加到服务，没有返回值
+
+```java
+//调用方
+ @RequestMapping("put")
+    public String put() {
+        User user = new User("put",121);
+        restTemplate.put("http://hello/client/put", user);
+        return "put ok";
+    }
+//接收方
+ @RequestMapping("put")
+    public void put(@RequestBody User user) {
+        System.out.println("ok");
+
+    }
+```
+
+
+
+
+
 ## delete
+
+删除某个资源
+
+```java
+//调用方
+@RequestMapping("delete")
+    public String delete() {
+        restTemplate.delete("http://hello/client/delete");
+        return "put ok";
+    }
+//接收方
+@RequestMapping("delete")
+    public void delete() {
+        System.out.println("ok");
+
+    }
+```
+
