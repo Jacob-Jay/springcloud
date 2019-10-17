@@ -421,11 +421,23 @@ RoundRobinRule
 轮询从所有服务中选择，不管是否可用
 ```
 
+```java
+WeightedResponseTimeRule
+通过响应时间权重选取服务
+权重依次为= 之前权重 + （总平均时间-自身平均时间）
 
+选取时根据最后一个权重产生一个平均数，如果轮询服务的权重》=时返回，   因此自身花费时间越少，增量越大占据的区间越大，被选中的几率越大，当服务列表与权重列表size不相等时就采用父类的方式
+```
 
+```java
+ClientConfigEnabledRoundRobinRule
+委托给内部的轮询RoundRobinRule
+```
 
-
-
+```java
+BestAvailableRule
+选择并发数最少的
+```
 
 Iping:
 
