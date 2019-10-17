@@ -397,3 +397,56 @@ ResponseEntity<String> post = restTemplate.
 	}
 ```
 
+
+
+## 主要接口
+
+IRule
+
+
+
+
+
+retry
+
+内部包含一个irule可以在一定时间内反复尝试
+
+```
+RandomRule
+随机选择，根据所有服务范围选取随机数从有效服务中获取，直到获取的服务可用为止
+```
+
+```java
+RoundRobinRule
+轮询从所有服务中选择，不管是否可用
+```
+
+
+
+
+
+
+
+Iping:
+
+```java
+public interface IPing {
+    //校验服务是否还可以使用
+    public boolean isAlive(Server server);
+}
+```
+
+
+
+![1571301954671](iping.png)
+
+IloadBalancer
+
+Servlist
+
+ServerListUpdater
+
+ServerlistFilter
+
+# ribbon与eureka整合
+
