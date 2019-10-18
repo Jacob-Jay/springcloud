@@ -401,15 +401,19 @@ ResponseEntity<String> post = restTemplate.
 
 ## 主要接口
 
-IRule
+### IRule 
+
+负载均衡算法
+
+![1571301954671](Irule.png)
 
 
 
-
-
+```java
 retry
 
 内部包含一个irule可以在一定时间内反复尝试
+```
 
 ```
 RandomRule
@@ -436,10 +440,27 @@ ClientConfigEnabledRoundRobinRule
 
 ```java
 BestAvailableRule
-选择并发数最少的
+选择没有负载并且请求数量最小的
 ```
 
-Iping:
+```java
+PredicateBasedRule
+根据内部的predicate选择服务
+```
+
+```
+ZoneAvoidanceRule
+PredicateBasedRule的子类内部是一个由ZoneAvoidancePredicate与AvailabilityPredicate组合的predicate
+```
+
+```java
+AvailabilityFilteringRule
+//PredicateBasedRule的子类重写了choose方法先轮询选择并通过predicate(断路器是否打开即服务是否故障，并发数大于阈值)判断十次失败就使用父类的
+```
+
+
+
+### Iping:
 
 ```java
 public interface IPing {
@@ -452,13 +473,31 @@ public interface IPing {
 
 ![1571301954671](iping.png)
 
-IloadBalancer
+### IloadBalancer
 
-Servlist
+由三部分组成
 
-ServerListUpdater
+1、存放服务列表
 
-ServerlistFilter
+2、选择策略
+
+3、确定可用性
+
+```java
+
+```
+
+
+
+
+
+
+
+### Servlist
+
+### ServerListUpdater
+
+### ServerlistFilter
 
 # ribbon与eureka整合
 
