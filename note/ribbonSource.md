@@ -475,6 +475,8 @@ public interface IPing {
 
 ### IloadBalancer
 
+![1571639806916](IloadBalancer.png)
+
 由三部分组成
 
 1、存放服务列表
@@ -484,7 +486,28 @@ public interface IPing {
 3、确定可用性
 
 ```java
+ILoadBalancer
+负载均衡器接口，定义了对服务列表的操作
+```
 
+```java
+AbstractLoadBalancer
+对负载均衡器增加了组的概念，以及获取LoadBalancerStats
+```
+
+```java
+BaseLoadBalancer
+是对负载均衡的基础实现，维护了所有服务列表以及可用服务列表，以及LoadBalancerStats、IPING、IRULR等实例。同时初始化时为启动一个定时任务使用iping校验服务的状态
+```
+
+```java
+DynamicServerListLoadBalancer
+使用ServerListFilter、ServerList、updateAction、serverListUpdater完成对运行时对服务列表的动态更新
+```
+
+```java
+ZoneAwareLoadBalancer
+在父类的基础上对服务列表按照区域进行管理
 ```
 
 
@@ -495,9 +518,70 @@ public interface IPing {
 
 ### Servlist
 
+![1571647129331](serverList.png)
+
+获取服务列表和更新的列表
+
+```java
+AbstractServerList
+提供了一个方法根据IClientConfig创建serverFilter对获取的服务列表进行过滤
+```
+
+```java
+ConfigurationBasedServerList
+从配置文件配置的服务信息构建返回服务列表
+<clientName>.<nameSpace>.listOfServers=<comma delimited hostname:port strings>
+```
+
+```java
+DiscoveryEnabledNIWSServerList
+从eureka获取服务列表信息
+```
+
+```java
+StaticServerList
+返回创建时给定的服务列表
+```
+
+```java
+DomainExtractingServerList
+委托给内部的servlist，并且将server包装为DomainExtractingServer
+```
+
+
+
+
+
 ### ServerListUpdater
 
+触发servlist获取服务的动作
+
+
+
 ### ServerlistFilter
+
+对获取的服务列表进行过滤
+
+![1571653608774](serverListFilter.png)
+
+```java
+ZoneAffinityServerListFilter
+在开启EnableZoneAffinity（区域亲和性）或EnableZoneExclusivity（区域排他性）时使用ZoneAffinityPredicate对服务进行过滤，并且还要校验本区域的服务是否能够提供服务
+```
+
+```java
+ServerListSubsetFilter
+只截取部分服务列表，通过配置的
+```
+
+```java
+ZonePreferenceServerListFilter
+经过父类区域过滤后数量没变再根据自身的设置的区域过滤一次
+```
+
+
+
+
 
 # ribbon与eureka整合
 
