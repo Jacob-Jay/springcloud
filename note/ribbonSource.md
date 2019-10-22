@@ -405,6 +405,16 @@ ResponseEntity<String> post = restTemplate.
 
 负载均衡算法
 
+```java
+    public Server choose(Object key);
+    
+    public void setLoadBalancer(ILoadBalancer lb);
+    
+    public ILoadBalancer getLoadBalancer();    
+```
+
+
+
 ![1571301954671](Irule.png)
 
 
@@ -475,6 +485,15 @@ public interface IPing {
 
 ### IloadBalancer
 
+```java
+public void addServers(List<Server> newServers);
+public Server chooseServer(Object key);
+public void markServerDown(Server server);
+public List<Server> getServerList(boolean availableOnly);
+ public List<Server> getReachableServers();
+public List<Server> getAllServers();
+```
+
 ![1571639806916](IloadBalancer.png)
 
 由三部分组成
@@ -518,6 +537,11 @@ ZoneAwareLoadBalancer
 
 ### Servlist
 
+```java
+public List<T> getInitialListOfServers();
+ public List<T> getUpdatedListOfServers();  
+```
+
 ![1571647129331](serverList.png)
 
 获取服务列表和更新的列表
@@ -535,7 +559,7 @@ ConfigurationBasedServerList
 
 ```java
 DiscoveryEnabledNIWSServerList
-从eureka获取服务列表信息
+从eureka获取服务列表信息，通过EurekaClient根据服务名获取本地缓存的服务列表
 ```
 
 ```java
@@ -554,13 +578,48 @@ DomainExtractingServerList
 
 ### ServerListUpdater
 
-触发servlist获取服务的动作
+触发servlist获取服务
+
+```java
+ public interface UpdateAction {
+        void doUpdate();  //执行跟新操作
+   } 
 
 
+void start(UpdateAction updateAction);
+ void stop();	
+ String getLastUpdate();  //最后一侧更新的时间戳
+ long getDurationSinceLastUpdateMs(); //距最后一次更新的时间
+ int getNumberMissedCycles();	//错过的更新次数
+ int getCoreThreads();  //使用的线程数
+```
+
+![img](serverlistUpdator.png)
+
+```java
+EurekaNotificationServerListUpdater 
+//通过EurekaEvent事件监听器触发servlist获取服务的动作
+
+
+LazyHolder//内部类提供一个线程池用于执行跟新操作
+```
+
+
+
+```java
+PollingServerListUpdater
+//使用ScheduledFuture间隔执行更新任务
+
+LazyHolder//内部类提供一个
+```
 
 ### ServerlistFilter
 
 对获取的服务列表进行过滤
+
+```java
+public List<T> getFilteredListOfServers(List<T> servers);
+```
 
 ![1571653608774](serverListFilter.png)
 
