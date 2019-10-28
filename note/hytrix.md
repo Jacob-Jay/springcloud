@@ -134,3 +134,69 @@ observable cold = toObservable();
 ```
 
 是
+
+# 功能
+
+## 服务降级
+
+## 断路器
+
+## 缓存
+
+由于http请求效率不高，可能成为服务的瓶颈，所以把部分请求结果缓存起来，如果只读不需要关心缓存失效，如果读写都存在则需要清理失效的缓存。
+
+```java
+HystrixRequestCache
+
+内部类
+RequestCacheKey    //对命令进行
+ private final short type;  //command为1  Collapser为2
+ private final String key;   //commandKey的name
+ private final HystrixConcurrencyStrategy concurrencyStrategy;
+
+
+ValueCacheKey
+ 	private final RequestCacheKey rvKey;
+    private final String valueCacheKey;
+
+
+自身
+//静态map存放了所欲请求的缓存
+static ConcurrentHashMap<RequestCacheKey, HystrixRequestCache> caches 
+
+//判断是否对此命令进行缓存，属性为true并且cacheKey方法返回值不为null
+  protected boolean isRequestCachingEnabled() {
+        return properties.requestCacheEnabled().get() && getCacheKey() != null;
+    }
+```
+
+
+
+
+
+## 请求合并
+
+是指将多个单个请求合并成一个批量请求如：
+
+```java
+User find(int id); //可以合并为以下方法
+List<User> finds(List<int>ids);
+```
+
+
+
+## 依赖隔离
+
+# 属性
+
+## command
+
+execution
+
+fallback
+
+circuitBreaker
+
+metrics
+
+## collapser
